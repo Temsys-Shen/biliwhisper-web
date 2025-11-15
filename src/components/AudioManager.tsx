@@ -133,11 +133,11 @@ export function AudioManager(props: { transcriber: Transcriber }) {
     const [progress, setProgress] = useState<number | undefined>(undefined);
     const [audioData, setAudioData] = useState<
         | {
-              buffer: AudioBuffer;
-              url: string;
-              source: AudioSource;
-              mimeType: string;
-          }
+            buffer: AudioBuffer;
+            url: string;
+            source: AudioSource;
+            mimeType: string;
+        }
         | undefined
     >(undefined);
     const [audioDownloadUrl, setAudioDownloadUrl] = useState<
@@ -239,49 +239,56 @@ export function AudioManager(props: { transcriber: Transcriber }) {
 
     return (
         <>
-            <div className='flex flex-col justify-center items-center rounded-lg bg-white shadow-xl shadow-black/5 ring-1 ring-slate-700/10'>
-                <div className='flex flex-row space-x-2 py-2 w-full px-2'>
-                    <UrlTile
-                        icon={<AnchorIcon />}
-                        text={"From URL"}
-                        onUrlUpdate={(e) => {
-                            props.transcriber.onInputChange();
-                            setAudioDownloadUrl(e);
-                        }}
-                    />
-                    <VerticalBar />
-                    <FileTile
-                        icon={<FolderIcon />}
-                        text={"From file"}
-                        onFileUpdate={(decoded, blobUrl, mimeType) => {
-                            props.transcriber.onInputChange();
-                            setAudioData({
-                                buffer: decoded,
-                                url: blobUrl,
-                                source: AudioSource.FILE,
-                                mimeType: mimeType,
-                            });
-                        }}
-                    />
-                    {navigator.mediaDevices && (
-                        <>
-                            <VerticalBar />
-                            <RecordTile
-                                icon={<MicrophoneIcon />}
-                                text={"Record"}
-                                setAudioData={(e) => {
+            <div className="w-full flex justify-center items-center">
+
+                <div className='inline-flex flex-col justify-center items-center rounded-lg bg-white shadow-xl shadow-black/5 ring-1 ring-slate-700/10 p-0 mx-auto'>
+                    <div className='flex flex-row flex-wrap inline-flex'>
+                        <div className='flex-1 min-w-[120px]'>
+                            <UrlTile
+                                icon={<AnchorIcon />}
+                                text={"从URL加载"}
+                                onUrlUpdate={(e) => {
                                     props.transcriber.onInputChange();
-                                    setAudioFromRecording(e);
+                                    setAudioDownloadUrl(e);
                                 }}
                             />
-                        </>
-                    )}
-                </div>
-                {
+                        </div>
+                        <VerticalBar />
+                        <div className='flex-1 min-w-[120px]'>
+                            <FileTile
+                                icon={<FolderIcon />}
+                                text={"从文件选择"}
+                                onFileUpdate={(decoded, blobUrl, mimeType) => {
+                                    props.transcriber.onInputChange();
+                                    setAudioData({
+                                        buffer: decoded,
+                                        url: blobUrl,
+                                        source: AudioSource.FILE,
+                                        mimeType: mimeType,
+                                    });
+                                }}
+                            />
+                        </div>
+                        {navigator.mediaDevices && (
+                            <>
+                                <VerticalBar />
+                                <div className='flex-1 min-w-[120px]'>
+                                    <RecordTile
+                                        icon={<MicrophoneIcon />}
+                                        text={"录制音频"}
+                                        setAudioData={(e) => {
+                                            props.transcriber.onInputChange();
+                                            setAudioFromRecording(e);
+                                        }}
+                                    />
+                                </div>
+                            </>
+                        )}
+                    </div>
                     <AudioDataBar
                         progress={isAudioLoading ? progress : +!!audioData}
                     />
-                }
+                </div>
             </div>
             {audioData && (
                 <>
@@ -296,7 +303,6 @@ export function AudioManager(props: { transcriber: Transcriber }) {
                                 props.transcriber.start(audioData.buffer);
                             }}
                             isModelLoading={props.transcriber.isModelLoading}
-                            // isAudioLoading ||
                             isTranscribing={props.transcriber.isBusy}
                         />
 
@@ -307,14 +313,14 @@ export function AudioManager(props: { transcriber: Transcriber }) {
                         />
                     </div>
                     {props.transcriber.progressItems.length > 0 && (
-                        <div className='relative z-10 p-4 w-full'>
-                            <label>
-                                Loading model files... (only run once)
+                        <div className='relative z-10 p-4 w-full bg-blue-50 rounded-lg mt-2'>
+                            <label className='font-medium text-blue-800 block mb-2'>
+                                加载模型文件中... (仅首次运行时加载)
                             </label>
                             {props.transcriber.progressItems.map((data) => (
-                                <div key={data.file}>
+                                <div key={data.file} className="mb-1">
                                     <Progress
-                                        text={data.file}
+                                        text={data.file.split('/').pop() || data.file}
                                         percentage={data.progress}
                                     />
                                 </div>
@@ -375,16 +381,16 @@ function SettingsModal(props: {
         'Xenova/whisper-medium': [776],
 
         // Distil Whisper (English-only)
-        'distil-whisper/distil-medium.en': [402],
-        'distil-whisper/distil-large-v2': [767],
+        // 'distil-whisper/distil-medium.en': [402],
+        // 'distil-whisper/distil-large-v2': [767],
     };
     return (
         <Modal
             show={props.show}
-            title={"Settings"}
+            title={"设置"}
             content={
                 <>
-                    <label>Select the model to use.</label>
+                    <label className="block text-gray-700 font-medium mb-1">选择使用的模型</label>
                     <select
                         className='mt-1 mb-1 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
                         defaultValue={props.transcriber.model}
@@ -395,97 +401,83 @@ function SettingsModal(props: {
                         {Object.keys(models)
                             .filter(
                                 (key) =>
-                                    props.transcriber.quantized ||
-                                    // @ts-ignore
-                                    models[key].length == 2,
+                                    true, // 始终使用量化模型
                             )
                             .filter(
                                 (key) => (
-                                    !props.transcriber.multilingual || !key.startsWith('distil-whisper/')
+                                    !key.startsWith('distil-whisper/') // 只显示多语言模型
                                 )
                             )
                             .map((key) => (
-                                <option key={key} value={key}>{`${key}${
-                                    (props.transcriber.multilingual || key.startsWith('distil-whisper/')) ? "" : ".en"
-                                } (${
+                                <option key={key} value={key}>{`${key} (${
                                     // @ts-ignore
-                                    models[key][
-                                        props.transcriber.quantized ? 0 : 1
-                                    ]
-                                }MB)`}</option>
+                                    models[key][0] // 总是使用量化版本的大小
+                                    }MB)`}</option>
                             ))}
                     </select>
-                    <div className='flex justify-between items-center mb-3 px-1'>
-                        <div className='flex'>
+                    <div className='flex justify-between items-center mb-3 px-1 mt-2 bg-blue-50 p-2 rounded-lg'>
+                        <div className='flex items-center'>
                             <input
                                 id='multilingual'
                                 type='checkbox'
-                                checked={props.transcriber.multilingual}
-                                onChange={(e) => {
-                                    props.transcriber.setMultilingual(
-                                        e.target.checked,
-                                    );
-                                }}
+                                checked={true}
+                                disabled
+                                className="cursor-not-allowed"
                             ></input>
-                            <label htmlFor={"multilingual"} className='ms-1'>
-                                Multilingual
+                            <label htmlFor={"multilingual"} className='ms-1 text-blue-800 font-medium'>
+                                多语言模式 (已启用)
                             </label>
                         </div>
-                        <div className='flex'>
+                        <div className='flex items-center'>
                             <input
                                 id='quantize'
                                 type='checkbox'
-                                checked={props.transcriber.quantized}
-                                onChange={(e) => {
-                                    props.transcriber.setQuantized(
-                                        e.target.checked,
-                                    );
-                                }}
+                                checked={true}
+                                disabled
+                                className="cursor-not-allowed"
                             ></input>
-                            <label htmlFor={"quantize"} className='ms-1'>
-                                Quantized
+                            <label htmlFor={"quantize"} className='ms-1 text-blue-800 font-medium'>
+                                量化模型 (已启用)
                             </label>
                         </div>
                     </div>
-                    {props.transcriber.multilingual && (
-                        <>
-                            <label>Select the source language.</label>
-                            <select
-                                className='mt-1 mb-3 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
-                                defaultValue={props.transcriber.language}
-                                onChange={(e) => {
-                                    props.transcriber.setLanguage(
-                                        e.target.value,
-                                    );
-                                }}
-                            >
-                                {Object.keys(LANGUAGES).map((key, i) => (
-                                    <option key={key} value={key}>
-                                        {names[i]}
-                                    </option>
-                                ))}
-                            </select>
-                            <label>Select the task to perform.</label>
-                            <select
-                                className='mt-1 mb-3 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
-                                defaultValue={props.transcriber.subtask}
-                                onChange={(e) => {
-                                    props.transcriber.setSubtask(
-                                        e.target.value,
-                                    );
-                                }}
-                            >
-                                <option value={"transcribe"}>Transcribe</option>
-                                <option value={"translate"}>
-                                    Translate (to English)
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-1">选择源语言</label>
+                        <select
+                            className='mt-1 mb-3 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+                            defaultValue={props.transcriber.language}
+                            onChange={(e) => {
+                                props.transcriber.setLanguage(
+                                    e.target.value,
+                                );
+                            }}
+                        >
+                            {Object.keys(LANGUAGES).map((key, i) => (
+                                <option key={key} value={key}>
+                                    {names[i]}
                                 </option>
-                            </select>
-                        </>
-                    )}
+                            ))}
+                        </select>
+                        <label className="block text-gray-700 font-medium mb-1">选择任务类型</label>
+                        <select
+                            className='mt-1 mb-3 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+                            defaultValue={props.transcriber.subtask}
+                            onChange={(e) => {
+                                props.transcriber.setSubtask(
+                                    e.target.value,
+                                );
+                            }}
+                        >
+                            <option value={"transcribe"}>语音识别</option>
+                            <option value={"translate"}>
+                                翻译为英文
+                            </option>
+                        </select>
+                    </div>
                 </>
             }
             onClose={props.onClose}
-            onSubmit={() => {}}
+            onSubmit={() => { }}
         />
     );
 }
@@ -495,10 +487,10 @@ function VerticalBar() {
 }
 
 function AudioDataBar(props: { progress: number }) {
-    return <ProgressBar progress={`${Math.round(props.progress * 100)}%`} />;
+    return <ProgressBar progress={Math.round(props.progress * 100)} />;
 }
 
-function ProgressBar(props: { progress: string }) {
+function ProgressBar(props: { progress: number }) {
     return (
         <div className='w-full bg-gray-200 rounded-full h-1 dark:bg-gray-700'>
             <div
@@ -555,15 +547,15 @@ function UrlModal(props: {
     return (
         <Modal
             show={props.show}
-            title={"From URL"}
+            title={"从URL加载音频"}
             content={
                 <>
-                    {"Enter the URL of the audio file you want to load."}
+                    <label className="block text-gray-700 font-medium mb-1">请输入要加载的音频文件URL</label>
                     <UrlInput onChange={onChange} value={url} />
                 </>
             }
             onClose={props.onClose}
-            submitText={"Load"}
+            submitText={"加载"}
             onSubmit={onSubmit}
         />
     );
@@ -680,15 +672,15 @@ function RecordModal(props: {
     return (
         <Modal
             show={props.show}
-            title={"From Recording"}
+            title={"录制音频"}
             content={
                 <>
-                    {"Record audio using your microphone"}
+                    <label className="block text-gray-700 font-medium mb-1">使用麦克风录制音频</label>
                     <AudioRecorder onRecordingComplete={onRecordingComplete} />
                 </>
             }
             onClose={onClose}
-            submitText={"Load"}
+            submitText={"加载"}
             submitEnabled={audioBlob !== undefined}
             onSubmit={onSubmit}
         />
@@ -707,7 +699,7 @@ function Tile(props: {
         >
             <div className='w-7 h-7'>{props.icon}</div>
             {props.text && (
-                <div className='ml-2 break-text text-center text-md w-30'>
+                <div className='ml-2 whitespace-nowrap text-center text-md min-w-[80px]'>
                     {props.text}
                 </div>
             )}
@@ -789,5 +781,26 @@ function MicrophoneIcon() {
                 d='M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z'
             />
         </svg>
+    );
+}
+
+function TranscriptionProgressModal(props: {
+    show: boolean;
+    transcriptionProgress: number;
+}) {
+    return (
+        <Modal
+            show={props.show}
+            title="语音识别中"
+            content={
+                <>
+                    <p className="text-gray-700 mb-3">正在进行语音识别，请稍候...</p>
+                    <ProgressBar progress={props.transcriptionProgress} />
+                </>
+            }
+            onClose={() => { }}
+            onSubmit={() => { }}
+        // hideClose属性不存在，使用其他方式控制关闭按钮
+        />
     );
 }

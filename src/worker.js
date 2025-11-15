@@ -1,8 +1,12 @@
 /* eslint-disable camelcase */
 import { pipeline, env } from "@xenova/transformers";
 
-// Disable local models
+// 禁用本地模型，强制从远程加载
 env.allowLocalModels = false;
+
+// 设置远程主机为国内镜像站点，解决国内下载不了模型的问题
+env.remoteHost = '/models';
+env.remotePathTemplate = '{model}/'
 
 // Define model factories
 // Ensures only one model is created of each type
@@ -35,7 +39,6 @@ class PipelineFactory {
 
 self.addEventListener("message", async (event) => {
     const message = event.data;
-
     // Do some work...
     // TODO use message data
     let transcript = await transcribe(
