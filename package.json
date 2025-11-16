@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "clean": "rm -rf node_modules/ dist/",
-    "build": "download && tsc && vite build",
     "download": "node download-models.js",
+    "build": "npm run download && tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint src/**/*.{js,jsx,ts,tsx,json}",
     "lint:fix": "eslint --fix src/**/*.{js,jsx,ts,tsx,json}",
