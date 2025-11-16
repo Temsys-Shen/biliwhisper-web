@@ -1,2 +1,0 @@
-# 为ONNX模型文件配置Git LFS
-*.onnx filter=lfs diff=lfs merge=lfs -text
